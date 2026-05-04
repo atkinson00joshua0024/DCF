@@ -15,6 +15,15 @@ def load_data():
 
 sheets, sheet_names = load_data()
 
+# --- Sidebar download ---
+with open("Disney_DCF_Valuation.xlsx", "rb") as f:
+    st.sidebar.download_button(
+        label="📥 Download Excel Model",
+        data=f,
+        file_name="Disney_DCF_Valuation.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📊 DCF Summary",
     "🔢 Sensitivity Analysis",
@@ -146,7 +155,7 @@ with tab2:
         except:
             return ""
 
-    styled = sens_df.style.format("${:.2f}").applymap(highlight_base)
+    styled = sens_df.style.format("${:.2f}").map(highlight_base)
     st.dataframe(styled, use_container_width=True)
 
     st.caption("🟡 Yellow = Base case (~$157). Green = above current price ($119.54). Red = below current price.")
