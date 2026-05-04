@@ -5,13 +5,15 @@ import numpy as np
 st.set_page_config(layout="wide", page_title="Disney DCF Valuation")
 st.title("🏰 Walt Disney Company — DCF Valuation Model")
 
-# --- Load Excel ---
+# --- Load Excel — returns dict of DataFrames so @st.cache_data can serialize it ---
 @st.cache_data
 def load_data():
     xl = pd.ExcelFile("Disney_DCF_Valuation.xlsx")
-    return xl
+    sheets = {name: pd.read_excel(xl, sheet_name=name, header=None) for name in xl.sheet_names}
+    sheet_names = xl.sheet_names
+    return sheets, sheet_names
 
-xl = load_data()
+sheets, sheet_names = load_data()
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📊 DCF Summary",
@@ -27,7 +29,6 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 with tab1:
     st.header("DCF Valuation Summary")
 
-    # Hardcoded from model output
     dcf = {
         "WACC": 0.09293,
         "Terminal Growth Rate": 0.03,
@@ -133,7 +134,6 @@ with tab2:
     sens_df.index.name = "WACC \\ TGR"
     sens_df.columns.name = None
 
-    # Highlight the base case cell
     def highlight_base(val):
         try:
             v = float(val)
@@ -162,11 +162,10 @@ with tab2:
 # ─────────────────────────────────────────────
 with tab3:
     st.header("Forecasted Assumptions")
-    try:
-        raw = pd.read_excel("Disney_DCF_Valuation.xlsx", sheet_name="Forecasted Assumptions", header=None)
-        st.dataframe(raw, use_container_width=True)
-    except Exception as e:
-        st.error(f"Could not load sheet: {e}")
+    if "Forecasted Assumptions" in sheets:
+        st.dataframe(sheets["Forecasted Assumptions"], use_container_width=True)
+    else:
+        st.error("Sheet 'Forecasted Assumptions' not found.")
 
 # ─────────────────────────────────────────────
 # TAB 4: FINANCIALS
@@ -174,16 +173,11 @@ with tab3:
 with tab4:
     st.header("Historical Financials")
 
-    sheet_names = xl.sheet_names
     financial_sheets = [s for s in sheet_names if s not in ["DCF Valuation", "Forecasted Assumptions"]]
 
     if financial_sheets:
         selected_sheet = st.selectbox("Select Statement", financial_sheets)
-        try:
-            df = pd.read_excel("Disney_DCF_Valuation.xlsx", sheet_name=selected_sheet, header=None)
-            st.dataframe(df, use_container_width=True)
-        except Exception as e:
-            st.error(f"Could not load sheet: {e}")
+        st.dataframe(sheets[selected_sheet], use_container_width=True)
     else:
         st.info("No additional financial statement sheets found.")
 
