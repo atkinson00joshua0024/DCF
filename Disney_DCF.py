@@ -163,7 +163,22 @@ with tab2:
     st.markdown("---")
     st.subheader("Implied Upside at Each Scenario")
     upside_df = (sens_df - dcf["Current Stock Price"]) / dcf["Current Stock Price"]
-    styled_upside = upside_df.style.format("{:.1%}").background_gradient(cmap="RdYlGn", vmin=-0.2, vmax=0.5)
+    def color_upside(val):
+        try:
+            v = float(val)
+            if v > 0.3:
+                return "background-color: #2ecc71; color: white"
+            elif v > 0.1:
+                return "background-color: #a8e6a3"
+            elif v > 0:
+                return "background-color: #d4edda"
+            elif v > -0.1:
+                return "background-color: #f8d7da"
+            else:
+                return "background-color: #e74c3c; color: white"
+        except:
+            return ""
+    styled_upside = upside_df.style.format("{:.1%}").map(color_upside)
     st.dataframe(styled_upside, use_container_width=True)
 
 # ─────────────────────────────────────────────
